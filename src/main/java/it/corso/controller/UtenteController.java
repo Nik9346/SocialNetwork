@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import it.corso.dto.UtenteDto;
 import it.corso.helper.PasswordValidationException;
 import it.corso.helper.Risposta;
 import it.corso.model.Utente;
@@ -61,7 +63,7 @@ public class UtenteController {
 																										// poi
 																										// assegniamo
 																										// gli attributi
-		return ResponseEntity.status(HttpStatus.OK).body((Utente) risposta); // se è un'istanza dell'oggetto utente
+		return ResponseEntity.status(HttpStatus.OK).body((UtenteDto) risposta); // se è un'istanza dell'oggetto utente
 																				// allora settiamo la risposta su ok e
 																				// castiamo nel body la risposta a
 																				// utente
@@ -69,26 +71,26 @@ public class UtenteController {
 
 	// endpoint #3: elenco utenti localhost:8080/social/utenti/get
 	@GetMapping("/get")
-	public ResponseEntity<List<Utente>> elencoUtenti() {
+	public ResponseEntity<List<UtenteDto>> elencoUtenti() {
 		return ResponseEntity.status(HttpStatus.OK).body(utenteService.elencoUtenti()); // come corpo impostiamo quello
 																						// che ci fornisce il metodo di
 																						// servizio
 	}
 
-	// endpoint #4: modifica dati utente localhost:8080/social/utenti/update/{id
+	// endpoint #4: modifica dati utente localhost:8080/social/utenti/update/{tkn
 	// utente}
-	@PutMapping("/update/{id}")
-	public ResponseEntity<Risposta> modificaDatiUtente(@PathVariable("id") Integer id,
+	@PutMapping("/update/{tkn}")
+	public ResponseEntity<Risposta> modificaDatiUtente(@PathVariable("tkn") String token,
 			@Valid @RequestBody Utente nuoviDati) {
-		Risposta risposta = utenteService.modificaDatiUtente(id, nuoviDati);
+		Risposta risposta = utenteService.modificaDatiUtente(token, nuoviDati);
 		return ResponseEntity.status(risposta.getCodice()).body(risposta);
 	}
 
-	// endpoint #5: eliminazione utente localhost:8080/social/utenti/delete/{id
+	// endpoint #5: eliminazione utente localhost:8080/social/utenti/delete/{tkn
 	// utente}
-	@DeleteMapping("/delete/{id}")
-	public ResponseEntity<Risposta> eliminazioneUtente(@PathVariable("id") Integer id) {
-		Risposta risposta = utenteService.eliminazioneUtente(id);
+	@DeleteMapping("/delete/{tkn}")
+	public ResponseEntity<Risposta> eliminazioneUtente(@PathVariable("tkn") String token) {
+		Risposta risposta = utenteService.eliminazioneUtente(token);
 		return ResponseEntity.status(risposta.getCodice()).body(risposta);
 	}
 

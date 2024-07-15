@@ -1,16 +1,20 @@
 package it.corso.model;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
-
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Pattern;
 
@@ -47,12 +51,56 @@ public class Utente {
 	@JsonIgnore //ignora completamente la presenza di questo attributo sia in fase di serializzazione che deserializzazione
 	private String token;
 	
+	@OneToMany(mappedBy = "utente", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<Post> posts = new ArrayList<>();
+	
+	@OneToMany(mappedBy = "utente", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<Commento> commenti = new ArrayList<>();
+	
+	@OneToMany(mappedBy = "utente", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<Like> likes = new ArrayList<>();
+	
+	@OneToMany(mappedBy = "richiedente", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<Amicizia> richieste = new ArrayList<>();
+	@OneToMany(mappedBy = "ricevente", cascade = CascadeType.REMOVE, fetch = FetchType.EAGER, orphanRemoval = true)
+	private List<Amicizia> ricevute = new ArrayList<>();
+	
 	//setter e getter
 	public Integer getId() {
 		return id;
 	}
 	public void setId(Integer id) {
 		this.id = id;
+	}
+	public List<Post> getPosts() {
+		return posts;
+	}
+	public void setPosts(List<Post> posts) {
+		this.posts = posts;
+	}
+	public List<Commento> getCommenti() {
+		return commenti;
+	}
+	public void setCommenti(List<Commento> commenti) {
+		this.commenti = commenti;
+	}
+	public List<Like> getLikes() {
+		return likes;
+	}
+	public void setLikes(List<Like> likes) {
+		this.likes = likes;
+	}
+	public List<Amicizia> getRichieste() {
+		return richieste;
+	}
+	public void setRichieste(List<Amicizia> richieste) {
+		this.richieste = richieste;
+	}
+	public List<Amicizia> getRicevute() {
+		return ricevute;
+	}
+	public void setRicevute(List<Amicizia> ricevute) {
+		this.ricevute = ricevute;
 	}
 	public LocalDate getDataIscrizione() {
 		return dataIscrizione;
