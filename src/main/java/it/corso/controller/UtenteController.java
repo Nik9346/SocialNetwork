@@ -18,15 +18,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import it.corso.dto.UtenteDto;
 import it.corso.helper.PasswordValidationException;
 import it.corso.helper.Risposta;
 import it.corso.model.Utente;
+import it.corso.schema.LoginUtenteSchema;
 import it.corso.service.UtenteService;
 import jakarta.validation.Valid;
 
 @RestController // da utilizzare per far in modo che sia un controller specifico per un rest
 @RequestMapping("/social/utenti")
+@Tag(name = "Controller Utente", description = "Funzionalità per la gestione degli utenti") // proprità utilizzata per
+																							// la documentazione
 public class UtenteController {
 	@Autowired
 	private UtenteService utenteService;
@@ -95,6 +105,14 @@ public class UtenteController {
 	}
 
 	// endpoint #6: login utente localhost:8080/social/utenti/login
+	@Operation(summary = "Login Utente", description = "Gestione richiesta Login Utente e verifica credenziali")
+	@io.swagger.v3.oas.annotations.parameters.RequestBody // attenzione a non confonderla con quella di springFramework
+	(content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginUtenteSchema.class))
+
+	)
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Login Autorizzato - ritorna token di autenticazione", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Risposta.class))),
+			@ApiResponse(responseCode = "401", description = "Login non Autorizzato", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Risposta.class))) })
 	@PutMapping("/login") // serve una richiesta che passi i dati nel body inoltre apportiamo una modifica
 							// x il token quindi put è corretto
 	public ResponseEntity<Risposta> loginUtente(@RequestBody Map<String, String> corpoRichiesta) { // sfrutto la mappa
@@ -111,10 +129,26 @@ public class UtenteController {
 																														// json
 		return ResponseEntity.status(risposta.getCodice()).body(risposta);
 	}
-	
-	//endpoint #7: logout utente localhost:8080/social/utenti/logout/{token}
+
+	// endpoint #7: logout utente localhost:8080/social/utenti/logout/{token}
+	@Operation(summary = "Logout Utente", description = "Gestione richiesta Logout Utente (richiede token auth)")
+	@ApiResponses(value = {
+			@ApiResponse(
+					responseCode = "200", 
+					description = "Logout Autorizzato", 
+					content = @Content(
+							mediaType = "application/json", 
+							schema = @Schema(implementation = Risposta.class))),
+			@ApiResponse(
+					responseCode = "401", 
+					description = "Operazione non autorizzata", 
+					content = @Content(
+							mediaType = "application/json", 
+							schema = @Schema(implementation = Risposta.class))) })
 	@DeleteMapping("/logout/{tkn}")
-	public ResponseEntity<Risposta> logoutUtente(@PathVariable("tkn") String token)  {
+	public ResponseEntity<Risposta> logoutUtente(
+			@Parameter(description = "Token di autenticazione")
+			@PathVariable("tkn") String token) {
 		Risposta risposta = utenteService.logoututente(token);
 		return ResponseEntity.status(risposta.getCodice()).body(risposta);
 	}

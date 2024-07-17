@@ -11,10 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import it.corso.dao.CommentoDao;
 import it.corso.dao.UtenteDao;
+import it.corso.dto.UtenteCommentoDto;
 import it.corso.dto.UtenteDto;
 import it.corso.helper.GeneratoreToken;
 import it.corso.helper.Risposta;
+import it.corso.model.Commento;
 import it.corso.model.Utente;
 
 @Service
@@ -28,9 +32,13 @@ public class UtenteServiceImpl implements UtenteService {
 
 	@Autowired
 	private BCryptPasswordEncoder encoder;
-	
+
 	@Autowired
-	private ModelMapper modelMapper; //attributo che ci permette di accedere al modelMapper per la mappatura dell'oggetto utente da presentare
+	private ModelMapper modelMapper; // attributo che ci permette di accedere al modelMapper per la mappatura
+										// dell'oggetto utente da presentare
+
+	@Autowired
+	private CommentoDao commentoDao; // attributo che ci permette di collegarci alla dao
 
 	@Override
 	public Risposta registrazioneUtente(Utente utente) {
@@ -87,16 +95,44 @@ public class UtenteServiceImpl implements UtenteService {
 																	// restituiamo 404
 		if (!utenteOptional.isPresent())
 			return new Risposta(404, "Utente non trovato");
-		UtenteDto utenteDto = modelMapper.map(utenteOptional.get(), UtenteDto.class); // trasforma l'utente ritornato da utenteOptional in utenteDto
-		return utenteDto; //ritorna il nuovo oggetto classe utenteDto costruito con utente in utenteOptional
+		UtenteDto utenteDto = modelMapper.map(utenteOptional.get(), UtenteDto.class); // trasforma l'utente ritornato da
+																						// utenteOptional in utenteDto
+		// per ogni commento di ogni post utente -> rimappatura Utente in
+		// UtenteCommentoDto
+		utenteDto.getPosts().forEach(p -> {
+			p.getCommenti().forEach(c -> {
+				Commento commento = commentoDao.findById(c.getId()).get(); // siamo sicuri di trovarlo quindi ci
+																			// invochiamo il metodo get
+				Utente utente = utenteDao.findById(commento.getUtente().getId()).get(); // siamo sicuri di trovare
+																						// l'utente quindi invochiamo il
+																						// metodo get
+				c.setEditor(modelMapper.map(utente, UtenteCommentoDto.class));
+			});
+		});
+
+		return utenteDto; // ritorna il nuovo oggetto classe utenteDto costruito con utente in
+							// utenteOptional
 	}
 
 	@Override
 	public List<UtenteDto> elencoUtenti() {
 
 		List<Utente> utenti = (List<Utente>) utenteDao.findAll();
-		List<UtenteDto> utentiDto = new ArrayList<>(); //istanziamo un arraylist di classe oggetto utenteDto
-		utenti.forEach(utente -> utentiDto.add(modelMapper.map(utente, UtenteDto.class))); //per ogni utente in utenti trasforma in utenteDto e aggiungi a utentiDto
+		List<UtenteDto> utentiDto = new ArrayList<>(); // istanziamo un arraylist di classe oggetto utenteDto
+		utenti.forEach(u -> {
+			UtenteDto utenteDto = modelMapper.map(u, UtenteDto.class);
+			utenteDto.getPosts().forEach(p -> {
+				p.getCommenti().forEach(c -> {
+					Commento commento = commentoDao.findById(c.getId()).get(); // siamo sicuri di trovarlo quindi ci
+					// invochiamo il metodo get
+					Utente utente = utenteDao.findById(commento.getUtente().getId()).get(); // siamo sicuri di trovare
+					// l'utente quindi invochiamo il
+					// metodo get
+					c.setEditor(modelMapper.map(utente, UtenteCommentoDto.class));
+				});
+			});
+			utentiDto.add(utenteDto);
+		}); // per ogni utente in utenti trasforma in utenteDto e aggiungi a utentiDto
 		return utentiDto;
 	}
 
